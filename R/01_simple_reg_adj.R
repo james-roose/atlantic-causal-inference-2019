@@ -6,7 +6,7 @@
 library(tidyverse)
 raw <- file.path("../data/raw/TestDatasets_lowD/")
 intermediate <- file.path("../data/intermediate")
-source("utility_funs.R")
+source("R/utility_funs.R")
 
 simple_reg_adj <- function(dataframe){
   #Learn Family ie Binary or Continuous Outcome
@@ -31,5 +31,4 @@ load(file = file.path(intermediate, "loaded_test_data.Rda"))
 estimated_ATEs <- lapply(df_list_data, FUN = simple_reg_adj)
 
 #Compare to Truth
-diff = unlist(estimated_ATEs) - unlist(true_ATEs)
-diff
+compare_to_truth(true_ATEs, estimated_ATEs)

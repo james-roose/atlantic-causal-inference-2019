@@ -6,10 +6,10 @@
 library(tidyverse)
 raw <- file.path("../data/raw/TestDatasets_lowD/")
 intermediate <- file.path("../data/intermediate")
-source("utility_funs.R")
+source("R/utility_funs.R")
 
-
-simple_ipw <- function(dataframe, stabilized = F, truncated = F){
+simple_ipw <- function(dataframe, stabilized = NULL, truncated = NULL,
+                       trunc_lower = 0.05, trunc_upper = 0.95){
   family = learn_outcome_family(dataframe)
   
   #Update later - this is simple 
@@ -20,7 +20,28 @@ simple_ipw <- function(dataframe, stabilized = F, truncated = F){
   probA = predict(fit_prop, data = prop_df, type = "response")
   
   #Get Weight for Each Subject
-  weights = dataframe$A*(1/probA)
+
+  
+  #Truncation vs Stabilization
+  if(is.null(truncated) & is.null(stabilized)){
+    weights = (dataframe$A==1)*(1/probA) +
+      (dataframe$A==0)*(1/(1-probA))
+  } else if (is.null(truncated) & !is.null(stabilized)){
+    #MHT Weights
+    unstab_weights = (dataframe$A==1)*(1/probA) +
+      (dataframe$A==0)*(1/(1-probA))
+    denom_A1 = ((dataframe$A==1)*(mean(dataframe$A)))/(unstab_weights)
+    denom_A0 = ((dataframe$A==0)*(1-mean(dataframe$A)))/(unstab_weights)
+    ### Fill this in
+    ###
+    ###
+  } else if (!is.null(truncated) & is.null(stabilized)){
+    #Truncated Weights at 5th and 95th quartiles
+    untruncated_weights = (dataframe$A==1)*(1/probA) +
+      (dataframe$A==0)*(1/(1-probA))
+    weights = bound_wt(untruncated_weights, lower_bound = trunc_lower,
+                       upper_bound = trunc_upper)
+  }
   
   #Now Estimate Weighted Average Difference
   Ey1 = dataframe$Y*(dataframe$A==1)*weights
@@ -32,7 +53,5 @@ simple_ipw <- function(dataframe, stabilized = F, truncated = F){
 
 load(file = file.path(intermediate, "loaded_test_data.Rda"))
 estimated_ATEs <- lapply(df_list_data, FUN = simple_ipw)
-
 #Compare to Truth
-diff = unlist(estimated_ATEs) - unlist(true_ATEs)
-diff
+compare_to_truth(true_ATEs, estimated_ATEs)

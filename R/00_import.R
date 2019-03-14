@@ -10,11 +10,13 @@ intermediate <- file.path("../data/intermediate")
 # Add some checks to see if data is available else point to online location
 df_list_data = lapply(list.files(raw, pattern = "*[[:digit:]].csv",
                                  full.names = T), FUN = read_csv)
-names(df_list_data) = lapply(list.files(raw, pattern = "*[[:digit:]].csv"))
+names(df_list_data) = lapply(list.files(raw, pattern = "*[[:digit:]].csv"),
+                             FUN = function(x) x )
 
 df_list_cf = lapply(list.files(raw, pattern = "*cf.csv", full.names = T),
                     FUN = read_csv)
-names(df_list_cf) = list.files(raw, pattern = "*cf.csv")
+names(df_list_cf) = lapply(list.files(raw, pattern = "*cf.csv"),
+                           FUN = function(x) x)
 
 # True ATEs
 get_ATE <- function(df){df[1,1]}
